@@ -1,0 +1,39 @@
+
+train = read.table("E:/project/train/X_train.txt", sep="", header=FALSE)
+train[,562] = read.table("E:/project/train/Y_train.txt", sep="", header=FALSE)
+train[,563] = read.table("E:/project/train/subject_train.txt", sep="", header=FALSE)
+
+test = read.table("E:/project/test/X_test.txt", sep="", header=FALSE)
+test[,562] = read.table("E:/project/test/Y_test.txt", sep="", header=FALSE)
+test[,563] = read.table("E:/project/test/subject_test.txt", sep="", header=FALSE)
+
+labels = read.table("read.table("E:/project/activity_labels.txt", sep="", header=FALSE)
+
+features = read.table("E:/project/features.txt", sep="", header=FALSE)
+features[,2] = gsub('-mean', 'Mean', features[,2])
+features[,2] = gsub('-std', 'Std', features[,2])
+features[,2] = gsub('[-()]', '', features[,2])
+
+Newdata = rbind(train, test)
+
+dataOnMeanSd <- grep(".*Mean.*|.*Std.*", features[,2])
+features <- features[dataOnMeanSd,]
+dataOnMeanSd <- c(dataOnMeanSd, 562, 563)
+Newdata <- Newdata[,dataOnMeanSd]
+
+colnames(Newdata) <- c(features$V2, "Activity", "Subject")
+colnames(Newdata) <- tolower(colnames(Newdata))
+
+current = 1
+for (currentActivityLabel in labels$V2) {
+  Newdata$activity <- gsub(current, currentActivityLabel, Newdata$activity)
+  current <- current + 1
+}
+
+Newdata$activity <- as.factor(Newdata$activity)
+Newdata$subject <- as.factor(Newdata$subject)
+
+Final = aggregate(Newdata, by=list(activity = Newdata$activity, subject=Newdata$subject), mean)
+Final[,90] = NULL
+Final[,89] = NULL
+write.table(Final, "E:/Final.txt", sep="\t")
